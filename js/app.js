@@ -30,7 +30,7 @@ const MEMBER_GALLERIES = {
       { src: 'img/IMG_6493.JPG', cap: 'Life' },
     ] },
   brother: { label: 'BHAI — AMIT MAURYA',           photos: [
-      { src: 'img/IMG_5191-EDIT.JPG', cap: 'Life' },
+      { src: 'img/IMG_5191-EDIT.jpg', cap: 'Life' },
       { src: 'img/IMG_5672.JPG', cap: 'Life' },
       { src: 'img/IMG_7573.JPG', cap: 'Life' },
     ] },
