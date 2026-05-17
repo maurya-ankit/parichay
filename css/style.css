@@ -675,6 +675,10 @@ img { display: block; max-width: 100%; height: auto; }
   justify-content: center;
 }
 
+.nodes-row--siblings .node-card {
+  max-width: 200px;
+}
+
 /* Individual node card */
 .node-card {
   background: #f9f8f6;

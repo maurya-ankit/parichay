@@ -3,41 +3,41 @@
    ============================================================ */
 
 const GALLERY = [
-  { src: 'img/IMG_4189.JPG', cap: 'Portrait' },
-  { src: 'img/IMG_4658.JPG', cap: 'Candid' },
-  { src: 'img/IMG_8518.JPG', cap: 'Travels' },
+  { src: 'img/IMG_4189.JPG', cap: 'In Frames' },
+  { src: 'img/IMG_4658.JPG', cap: 'Festive at Work' },
+  { src: 'img/IMG_8518.JPG', cap: 'Waves & Thrills' },
   { src: 'img/IMG_5730.JPG', cap: 'Moments' },
-  { src: 'img/IMG_4156.JPG', cap: 'Casual' },
-  { src: 'img/IMG_4137.JPG', cap: 'Outdoors' },
-  { src: 'img/IMG_4128.JPG', cap: 'With family' },
+  { src: 'img/IMG_4156.JPG', cap: 'Weekend State' },
+  { src: 'img/IMG_4137.JPG', cap: 'Casual Frames' },
+  { src: 'img/IMG_4128.JPG', cap: 'Everyday Me' },
 ];
 
 /* ---- Per-member galleries — add photos here as { src, cap } objects ---- */
 const MEMBER_GALLERIES = {
-  papa:    { label: 'PAPA — MR. VIJAY KUMAR MAURYA', photos: [
-      {src: 'img/IMG_6612.JPG', cap: 'Life'},
-      { src: 'img/IMG_6579.JPG', cap: 'Life' },
-      { src: 'img/IMG_6595.JPG', cap: 'Life' },
-      { src: 'img/IMG_6530.JPG', cap: 'Life' },
-      { src: 'img/IMG_6493.JPG', cap: 'Life' },
+  papa:    { label: 'FATHER — MR. VIJAY KUMAR MAURYA', photos: [
+      {src: 'img/IMG_6612.JPG', cap: 'Strength in Simplicity'},
+      { src: 'img/IMG_6579.JPG', cap: 'Iron Man & Iron Lady' },
+      { src: 'img/IMG_6595.JPG', cap: 'Pillars of Our Family' },
+      { src: 'img/IMG_6530.JPG', cap: 'The Strongest Duo' },
+      { src: 'img/IMG_6493.JPG', cap: 'Standing Tall Together' },
     ] },
-  mamma:   { label: 'MAMMA — MRS. SUMITRA MAURYA',  photos: [
-      { src: 'img/IMG_6490.JPG', cap: 'Life' },
-      { src: 'img/IMG_6610.JPG', cap: 'Life' },
-      { src: 'img/IMG_6579.JPG', cap: 'Life' },
-      { src: 'img/IMG_6595.JPG', cap: 'Life' },
-      { src: 'img/IMG_6530.JPG', cap: 'Life' },
-      { src: 'img/IMG_6493.JPG', cap: 'Life' },
+  mamma:   { label: 'MOTHER — MRS. SUMITRA MAURYA',  photos: [
+      { src: 'img/IMG_6490.JPG', cap: 'Pure Grace' },
+      { src: 'img/IMG_6610.JPG', cap: 'A Gentle Soul' },
+      { src: 'img/IMG_6579.JPG', cap: 'Iron Man & Iron Lady' },
+      { src: 'img/IMG_6595.JPG', cap: 'Pillars of Our Family' },
+      { src: 'img/IMG_6530.JPG', cap: 'The Strongest Duo' },
+      { src: 'img/IMG_6493.JPG', cap: 'Standing Tall Together' },
     ] },
-  brother: { label: 'BHAI — AMIT MAURYA',           photos: [
-      { src: 'img/IMG_5191-EDIT.jpg', cap: 'Life' },
-      { src: 'img/IMG_5672.JPG', cap: 'Life' },
-      { src: 'img/IMG_7573.JPG', cap: 'Life' },
+  brother: { label: 'ELDER BROTHER — AMIT MAURYA',   photos: [
+      { src: 'img/IMG_5191-EDIT.jpg', cap: 'New Beginnings' },
+      { src: 'img/IMG_5672.JPG', cap: 'A Beautiful Union' },
+      { src: 'img/IMG_7573.JPG', cap: 'Blessings & Smiles' },
     ] },
-  sister:  { label: 'DIDI — MADHURI MAURYA',         photos: [
-      { src: 'img/IMG_3521.jpg', cap: 'Life' },
-      { src: 'img/IMG_3589.jpg', cap: 'Life' },
-      { src: 'img/IMG_7550.JPG', cap: 'Life' },
+  sister:  { label: 'ELDER SISTER — MADHURI MAURYA',  photos: [
+      { src: 'img/IMG_3521.jpg', cap: 'Happiness Forever' },
+      { src: 'img/IMG_3589.jpg', cap: 'A Bond of Love' },
+      { src: 'img/IMG_7550.JPG', cap: 'Blessings & Smiles' },
     ] },
 };
 
@@ -74,8 +74,9 @@ function toggleFamily(id) {
 var heroIndex = 0;
 
 function initHeroSlideshow() {
-  var img = document.querySelector('.hero__img');
-  if (!img) return;
+  var frame = document.getElementById('hero-img-frame');
+  var imgA  = frame ? frame.querySelector('.hero__img') : null;
+  if (!frame || !imgA) return;
 
   // Preload all images silently
   GALLERY.forEach(function (g) {
@@ -83,17 +84,39 @@ function initHeroSlideshow() {
     p.src = g.src;
   });
 
+  // Second image layered on top for a true crossfade.
+  // imgA stays at full opacity the whole time so Android auto-brightness
+  // never sees the page go dark during the transition.
+  var imgB = document.createElement('img');
+  imgB.className = 'hero__img';
+  imgB.alt       = imgA.alt;
+  imgB.style.cssText =
+    'position:absolute;top:14px;left:14px;width:calc(100% - 28px);' +
+    'z-index:3;opacity:0;transition:opacity 0.68s ease;margin:0;';
+  frame.appendChild(imgB);
+
   setInterval(function () {
-    img.style.opacity = '0';
+    heroIndex = (heroIndex + 1) % GALLERY.length;
+    imgB.src = GALLERY[heroIndex].src;
+    imgB.alt = GALLERY[heroIndex].cap;
+    imgB.style.transition = 'none';
+    imgB.style.opacity    = '0';
+
+    // Double rAF ensures the opacity:0 paint commits before we start fading in
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        imgB.style.transition = 'opacity 0.68s ease';
+        imgB.style.opacity    = '1';
+      });
+    });
+
+    // Once imgB is fully visible, quietly update imgA and hide imgB
     setTimeout(function () {
-      heroIndex = (heroIndex + 1) % GALLERY.length;
-      img.style.transition = 'none';       // swap src with no transition (at opacity 0)
-      img.src = GALLERY[heroIndex].src;
-      img.alt = GALLERY[heroIndex].cap;
-      void img.offsetHeight;               // force reflow so src paint is committed
-      img.style.transition = 'opacity 0.68s ease';
-      img.style.opacity = '1';
-    }, 780);
+      imgA.src = GALLERY[heroIndex].src;
+      imgA.alt = GALLERY[heroIndex].cap;
+      imgB.style.transition = 'opacity 0.3s ease';
+      imgB.style.opacity    = '0';
+    }, 720);
   }, 2400);
 }
 
