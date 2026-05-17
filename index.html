@@ -32,6 +32,19 @@
 </head>
 <body>
 
+<!-- ======================== SPLASH LOADER ======================== -->
+<div id="splash" aria-hidden="true">
+  <div class="splash__inner">
+    <div class="splash__name">
+      <span class="splash__name-line">ANKIT</span>
+      <span class="splash__name-line splash__name-line--outline">MAURYA</span>
+    </div>
+    <div class="splash__bar-wrap">
+      <div class="splash__bar"></div>
+    </div>
+    <span class="splash__label">Loading</span>
+  </div>
+</div>
 
 <main class="paper-container">
 
@@ -115,7 +128,7 @@
           <p class="card__year">2014 &#8212; 2015</p>
           <span class="mono-label card__type">Class X</span>
           <h3 class="card__heading">High School</h3>
-          <p class="card__meta">Rastriya Intermediate College, Sujanganj, Jaunpur</p>
+          <p class="card__meta">Rashtriya Intermediate College, Sujanganj, Jaunpur</p>
         </div>
 
         <div class="scrapbook-card">
@@ -123,7 +136,7 @@
           <p class="card__year">2015 &#8212; 2017</p>
           <span class="mono-label card__type">Class XII</span>
           <h3 class="card__heading">Intermediate</h3>
-          <p class="card__meta">Rastriya Intermediate College, Sujanganj, Jaunpur</p>
+          <p class="card__meta">Rashtriya Intermediate College, Sujanganj, Jaunpur</p>
         </div>
 
         <div class="scrapbook-card">
@@ -279,5 +292,27 @@
 </div>
 
 <script src="js/app.js" defer></script>
+<script>
+  (function () {
+    var splash = document.getElementById('splash');
+    var MIN_MS = 1800; // minimum display time so the animation completes
+    var start  = Date.now();
+
+    function hideSplash() {
+      var elapsed = Date.now() - start;
+      var delay   = Math.max(0, MIN_MS - elapsed);
+      setTimeout(function () {
+        splash.classList.add('is-hidden');
+        setTimeout(function () { splash.remove(); }, 650);
+      }, delay);
+    }
+
+    if (document.readyState === 'complete') {
+      hideSplash();
+    } else {
+      window.addEventListener('load', hideSplash);
+    }
+  })();
+</script>
 </body>
 </html>

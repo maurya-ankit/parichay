@@ -142,6 +142,22 @@ var isDragging    = false;
 var dragStartX    = 0;
 var dragCurrentX  = 0;
 
+/* Img element pool — keyed by src, persists across _renderDeck calls so
+   elements are never destroyed and their decoded pixel data stays in memory. */
+var _imgPool       = Object.create(null);
+var _pooledGallery = null;
+
+function _getPooledImg(src, alt) {
+  if (!_imgPool[src]) {
+    var img     = document.createElement('img');
+    img.draggable = false;
+    img.alt     = alt;
+    img.src     = src;
+    _imgPool[src] = img;
+  }
+  return _imgPool[src];
+}
+
 /* Position descriptors: 0 = front card, 1 = second, etc. */
 function _cardPos(pos) {
   var p = [
@@ -156,7 +172,10 @@ function _cardPos(pos) {
 function _renderDeck() {
   var deck = document.getElementById('card-deck');
   if (!deck) return;
-  deck.innerHTML = '';
+
+  /* Detach children without destroying pool references (innerHTML = '' would
+     remove elements from the DOM AND drop the browser's decoded pixel data). */
+  while (deck.firstChild) deck.removeChild(deck.firstChild);
 
   var ctr = document.getElementById('card-counter');
 
@@ -187,9 +206,11 @@ function _renderDeck() {
       'z-index:' + s.z + ';' +
       'transition:transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94),opacity 0.42s;';
 
-    card.innerHTML =
-      '<img src="' + g.src + '" alt="' + g.cap + '" draggable="false">' +
-      '<p class="card-gallery__cap">' + g.cap.toUpperCase() + '</p>';
+    card.appendChild(_getPooledImg(g.src, g.cap));
+    var cap = document.createElement('p');
+    cap.className   = 'card-gallery__cap';
+    cap.textContent = g.cap.toUpperCase();
+    card.appendChild(cap);
 
     deck.appendChild(card);
   }
@@ -205,6 +226,14 @@ function openCardGallery(startIndex, gallery, label) {
 
   var titleEl = document.getElementById('card-gallery-title');
   if (titleEl) titleEl.textContent = currentGalleryLabel;
+
+  /* Rebuild pool when switching to a different gallery so all images for
+     this gallery are pre-created and start decoding immediately. */
+  if (_pooledGallery !== currentGallery) {
+    _imgPool       = Object.create(null);
+    _pooledGallery = currentGallery;
+    currentGallery.forEach(function (g) { _getPooledImg(g.src, g.cap); });
+  }
 
   cardIndex = currentGallery.length > 0
     ? ((startIndex % currentGallery.length) + currentGallery.length) % currentGallery.length
