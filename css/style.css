@@ -485,9 +485,40 @@ img { display: block; max-width: 100%; height: auto; }
 .about__media-ph {
   background: #1c1c1c;
   border: 1px dashed #3a3a3a;
-  padding: 52px 24px;
+  padding: 36px 24px;
   text-align: center;
   border-radius: 4px;
+}
+
+.lifestyle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.lifestyle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 16px 8px;
+}
+
+.lifestyle-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.lifestyle-label {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
 }
 
 /* =========================================================
@@ -573,6 +604,43 @@ img { display: block; max-width: 100%; height: auto; }
   line-height: 1.75;
   color: var(--ink-mid);
   margin-top: 10px;
+}
+
+.live-dot {
+  display: inline-block;
+  position: relative;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: live-blink 2s ease-in-out infinite;
+}
+
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #22c55e;
+  animation: live-pulse 2s ease-out infinite;
+}
+
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes live-pulse {
+  0%   { transform: scale(1);   opacity: 0.8; filter: blur(0px); }
+  100% { transform: scale(2.8); opacity: 0;   filter: blur(3px); }
 }
 
 /* =========================================================

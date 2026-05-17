@@ -78,46 +78,59 @@ function initHeroSlideshow() {
   var imgA  = frame ? frame.querySelector('.hero__img') : null;
   if (!frame || !imgA) return;
 
-  // Preload all images silently
-  GALLERY.forEach(function (g) {
-    var p = new Image();
-    p.src = g.src;
-  });
+  GALLERY.forEach(function (g) { new Image().src = g.src; });
 
-  // Second image layered on top for a true crossfade.
-  // imgA stays at full opacity the whole time so Android auto-brightness
-  // never sees the page go dark during the transition.
   var imgB = document.createElement('img');
   imgB.className = 'hero__img';
-  imgB.alt       = imgA.alt;
   imgB.style.cssText =
     'position:absolute;top:14px;left:14px;width:calc(100% - 28px);' +
-    'z-index:3;opacity:0;transition:opacity 0.68s ease;margin:0;';
+    'z-index:3;opacity:0;margin:0;pointer-events:none;';
   frame.appendChild(imgB);
 
-  setInterval(function () {
-    heroIndex = (heroIndex + 1) % GALLERY.length;
-    imgB.src = GALLERY[heroIndex].src;
-    imgB.alt = GALLERY[heroIndex].cap;
+  var busy = false;
+
+  function advance() {
+    if (busy) return;
+    busy = true;
+
+    var next = (heroIndex + 1) % GALLERY.length;
+
     imgB.style.transition = 'none';
     imgB.style.opacity    = '0';
+    imgB.src = GALLERY[next].src;
+    imgB.alt = GALLERY[next].cap;
 
-    // Double rAF ensures the opacity:0 paint commits before we start fading in
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        imgB.style.transition = 'opacity 0.68s ease';
-        imgB.style.opacity    = '1';
-      });
-    });
+    function doFade() {
+      heroIndex = next;
+      void imgB.offsetWidth;
+      imgB.style.transition = 'opacity 0.9s ease, filter 0.9s ease, transform 0.9s ease';
+      imgB.style.opacity    = '1';
+      imgB.style.filter     = 'blur(0px)';
+      imgB.style.transform  = 'scale(1)';
 
-    // Once imgB is fully visible, quietly update imgA and hide imgB
-    setTimeout(function () {
-      imgA.src = GALLERY[heroIndex].src;
-      imgA.alt = GALLERY[heroIndex].cap;
-      imgB.style.transition = 'opacity 0.3s ease';
-      imgB.style.opacity    = '0';
-    }, 720);
-  }, 2400);
+      setTimeout(function () {
+        imgA.src = GALLERY[heroIndex].src;
+        imgA.alt = GALLERY[heroIndex].cap;
+
+        var hide = function () {
+          imgB.style.transition = 'opacity 0.5s ease';
+          imgB.style.opacity    = '0';
+          setTimeout(function () {
+            imgB.style.transform = 'scale(1.04)';
+            imgB.style.filter   = 'blur(10px)';
+            busy = false;
+          }, 500);
+        };
+        imgA.decode ? imgA.decode().then(hide).catch(hide) : hide();
+      }, 950);
+    }
+
+    imgB.style.transform = 'scale(1.04)';
+    imgB.style.filter    = 'blur(10px)';
+    imgB.decode ? imgB.decode().then(doFade).catch(doFade) : doFade();
+  }
+
+  setInterval(advance, 3500);
 }
 
 /* ================================================================
