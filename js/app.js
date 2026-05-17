@@ -297,27 +297,50 @@ function prevCard() {
   if (cardAnimating) return;
   cardAnimating = true;
 
-  cardIndex = (cardIndex - 1 + currentGallery.length) % currentGallery.length;
-  _renderDeck();
+  var prevIndex = (cardIndex - 1 + currentGallery.length) % currentGallery.length;
+  var deck      = document.getElementById('card-deck');
 
-  // Animate new front card in from the right
-  var front = document.querySelector('#card-deck [data-pos="0"]');
-  if (front) {
-    front.style.transition = 'none';
-    front.style.transform  = 'translate(145%, -8px) rotate(18deg) scale(0.85)';
-    front.style.opacity    = '0';
+  // Shift all existing cards one position deeper into the stack
+  var existing = document.querySelectorAll('#card-deck [data-pos]');
+  existing.forEach(function (card) {
+    var p = parseInt(card.getAttribute('data-pos')) + 1;
+    var s = _cardPos(p);
+    card.setAttribute('data-pos', String(p));
+    card.style.transition = 'transform 0.34s ease, opacity 0.34s ease';
+    card.style.transform  = s.t;
+    card.style.opacity    = s.o;
+  });
+
+  // Build new front card from pool and place it off-screen to the right
+  var g        = currentGallery[prevIndex];
+  var newFront = document.createElement('div');
+  newFront.className = 'card-gallery__card';
+  newFront.setAttribute('data-pos', '0');
+  newFront.style.cssText =
+    'transform:translate(145%,-8px) rotate(18deg) scale(0.85);' +
+    'opacity:0;z-index:10;transition:none;';
+  newFront.appendChild(_getPooledImg(g.src, g.cap));
+  var cap = document.createElement('p');
+  cap.className   = 'card-gallery__cap';
+  cap.textContent = g.cap.toUpperCase();
+  newFront.appendChild(cap);
+  deck.appendChild(newFront);
+
+  // Slide new front card in from the right
+  requestAnimationFrame(function () {
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        front.style.transition = 'transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.42s';
-        var s = _cardPos(0);
-        front.style.transform  = s.t;
-        front.style.opacity    = s.o;
-        setTimeout(function () { cardAnimating = false; }, 430);
-      });
+      var s0 = _cardPos(0);
+      newFront.style.transition = 'transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.42s';
+      newFront.style.transform  = s0.t;
+      newFront.style.opacity    = s0.o;
+
+      setTimeout(function () {
+        cardIndex = prevIndex;
+        _renderDeck();
+        cardAnimating = false;
+      }, 430);
     });
-  } else {
-    cardAnimating = false;
-  }
+  });
 }
 
 /* ---- Toast helper ---- */
