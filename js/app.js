@@ -2,6 +2,13 @@
    app.js — Ankit Maurya Biodata
    ============================================================ */
 
+/* ---- Analytics helper ---- */
+function track(evt, params) {
+  if (typeof gtag === 'function') gtag('event', evt, params || {});
+}
+
+var _navMethod = 'button'; // 'button' | 'swipe' | 'keyboard'
+
 const GALLERY = [
   { src: 'img/IMG_4189.JPG', cap: 'In Frames' },
   { src: 'img/IMG_4658.JPG', cap: 'Festive at Work' },
@@ -60,11 +67,13 @@ function toggleFamily(id) {
     icon.textContent = '+';
     btn.setAttribute('aria-expanded', 'false');
     content.setAttribute('aria-hidden', 'true');
+    track('family_tree_toggle', { group: id, action: 'collapse' });
   } else {
     content.style.maxHeight = content.scrollHeight + 'px';
     icon.textContent = '−';
     btn.setAttribute('aria-expanded', 'true');
     content.setAttribute('aria-hidden', 'false');
+    track('family_tree_toggle', { group: id, action: 'expand' });
   }
 }
 
@@ -224,6 +233,8 @@ function openCardGallery(startIndex, gallery, label) {
   currentGallery      = gallery || GALLERY;
   currentGalleryLabel = label  || 'PHOTO GALLERY';
 
+  track('gallery_open', { gallery_name: currentGalleryLabel });
+
   var titleEl = document.getElementById('card-gallery-title');
   if (titleEl) titleEl.textContent = currentGalleryLabel;
 
@@ -258,6 +269,7 @@ function openMemberGallery(memberId) {
 function closeCardGallery() {
   var el = document.getElementById('card-gallery');
   if (!el) return;
+  track('gallery_close', { gallery_name: currentGalleryLabel, photos_viewed: cardIndex + 1 });
   el.classList.remove('is-open');
   el.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
@@ -267,6 +279,8 @@ function closeCardGallery() {
 function nextCard() {
   if (cardAnimating) return;
   cardAnimating = true;
+  track('gallery_navigate', { direction: 'next', method: _navMethod, gallery_name: currentGalleryLabel, photo_index: cardIndex + 1 });
+  _navMethod = 'button';
 
   // Fly front card off to the left
   var front = document.querySelector('#card-deck [data-pos="0"]');
@@ -296,6 +310,8 @@ function nextCard() {
 function prevCard() {
   if (cardAnimating) return;
   cardAnimating = true;
+  track('gallery_navigate', { direction: 'prev', method: _navMethod, gallery_name: currentGalleryLabel, photo_index: cardIndex + 1 });
+  _navMethod = 'button';
 
   var prevIndex = (cardIndex - 1 + currentGallery.length) % currentGallery.length;
   var deck      = document.getElementById('card-deck');
@@ -458,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
     front.style.cursor = 'grab';
     var dx = dragCurrentX - dragStartX;
     if (Math.abs(dx) > 80) {
+      _navMethod = 'swipe';
       if (dx < 0) nextCard(); else prevCard();
     } else {
       front.style.transition = 'transform 0.32s ease, opacity 0.32s ease';
@@ -498,6 +515,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!front) return;
     var dx = dragCurrentX - dragStartX;
     if (Math.abs(dx) > 70) {
+      _navMethod = 'swipe';
       if (dx < 0) nextCard(); else prevCard();
     } else {
       front.style.transition = 'transform 0.32s ease, opacity 0.32s ease';
@@ -512,8 +530,66 @@ document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById('card-gallery');
     if (!el || !el.classList.contains('is-open')) return;
     if (e.key === 'Escape')     closeCardGallery();
-    if (e.key === 'ArrowLeft')  prevCard();
-    if (e.key === 'ArrowRight') nextCard();
+    if (e.key === 'ArrowLeft')  { _navMethod = 'keyboard'; prevCard(); }
+    if (e.key === 'ArrowRight') { _navMethod = 'keyboard'; nextCard(); }
+  });
+
+  /* ---- Hero tap ---- */
+  var heroFrameEl = document.getElementById('hero-img-frame');
+  if (heroFrameEl) {
+    heroFrameEl.addEventListener('click', function () {
+      track('hero_tap');
+    });
+  }
+
+  /* ---- PDF download ---- */
+  var pdfBtn = document.querySelector('.nav__pdf-btn');
+  if (pdfBtn) {
+    pdfBtn.addEventListener('click', function () {
+      track('pdf_download');
+    });
+  }
+
+  /* ---- Section views (IntersectionObserver) ---- */
+  var _seenSections = {};
+  if ('IntersectionObserver' in window) {
+    var sectionObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var name = entry.target.id || entry.target.className;
+          if (!_seenSections[name]) {
+            _seenSections[name] = true;
+            track('section_view', { section_name: name });
+          }
+        }
+      });
+    }, { threshold: 0.3 });
+
+    ['hero', 'about', 'education', 'roots', 'contact'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) sectionObserver.observe(el);
+    });
+  }
+
+  /* ---- Scroll depth ---- */
+  var _scrollDepthHits = {};
+  window.addEventListener('scroll', function () {
+    var scrolled  = window.scrollY + window.innerHeight;
+    var total     = document.documentElement.scrollHeight;
+    var pct       = Math.round((scrolled / total) * 100);
+    [25, 50, 75, 100].forEach(function (milestone) {
+      if (pct >= milestone && !_scrollDepthHits[milestone]) {
+        _scrollDepthHits[milestone] = true;
+        track('scroll_depth', { percent: milestone });
+      }
+    });
+  }, { passive: true });
+
+  /* ---- Time on page milestones ---- */
+  [30, 60, 180, 300].forEach(function (secs) {
+    setTimeout(function () {
+      track('time_on_page', { seconds: secs });
+    }, secs * 1000);
   });
 
 });
